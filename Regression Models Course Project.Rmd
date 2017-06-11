@@ -1,0 +1,141 @@
+---
+title: "Regression Models Course Project"
+subtitle: "Report of the analysis on the MPG difference between automatic and manual transmissions"
+author: "Kenny Ong"
+date: "June 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+
+This course project ("project") is part of John Hopkins University Data Science Specialization Course 7 via Coursera (Online).
+
+## Problem Statement
+
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+1. “Is an automatic or manual transmission better for MPG”
+2. "Quantify the MPG difference between automatic and manual transmissions"
+
+## Work Performed - Exploratory Data Analysis
+
+The dataset can be found from the dataset package. Firstly, load the dataset and undertand the variables.
+
+```{r,eval=FALSE}
+library(datasets)
+data(mtcars)
+?mtcars
+```
+
+According to documentation the data was extracted from 1974 Motor Trend US Magazine, and comprises fuel consumption and other performance information in respect of 32 car manufacturers. Consistent to the initial exploratory on the dataset, it appears that the dataset contains 32 observations and 11 variables.
+
+We also performed other exploratory analsis on the dataset using boxplot to summarize the the dataset by miles per gallon (mpg). The output of the boxplot analysis can be found on Appendix 1 of this report.
+
+```{r,eval=FALSE}
+boxplot(mpg ~ am, data = mtcars, xlab = "Transmission type", ylab = "Miles per gallon")
+```
+
+It appears from the boxplot analysis that cars with automatic transmission regardless of manufacturer have lower mpg than cars with manual transmission.
+
+We also performed pairwise analysis using scatter plot among all the 11 variables on the dataset as presented on Appendix 2 of this report. It appears that the weight (wt) is very negatively correlated with mpg, meaning that the heavier the car, the lower its mpg. 
+
+```{r,eval=FALSE}
+pairs(mtcars)
+```
+
+## Work Performed - Statistical Inference Analysis
+Before we performed a regression modeling on the dataset, we performed analysis using t-test to confirm that the fuel efficiency (mpg) for automatics and manual transmission cars are different by statistics. 
+
+```{r}
+t.test(mtcars$mpg ~ mtcars$am)
+```
+
+From the t-test analysts, it appears that the p-value computed is 0.001374. That proves that the fuel efficiency of cars (mpg) for automatic and manual transmission cars are indeed different. That is because if the p-value from the test is less than (<0.05) it means the the difference being tested is significant.
+
+## Work Performed - Regression Modeling
+
+We first built a base model to predict mpg based on only the transmission type (am) as predictor.
+
+```{r,eval=FALSE}
+baseModel <- lm(mpg ~ am, data = mtcars)
+```
+
+The result shows that the model is inadequate as the calculated R-squared value is 0.34, indicating that only 34% of the variance can be explained. 
+
+We then adopted the Backward Stepwise Regression method to design our desired model. We first created a full model called fullModel, and performed the backward stepwise regression method using the fullModel and called it stepModel.
+
+```{r,eval=FALSE}
+fullModel <- lm(mpg ~ ., data = mtcars)
+stepModel <- step(fullModel, direction="backward", k=2, trace=0)
+```
+
+When building our best model, we manually removed and added variables to evetually decide the best models to be built on quater mile time (qsec), weight (wt) and transmission type (am). We call our model bestModel. The summary of the best model is presented at Appendix 3 of this report.
+
+```{r,eval=FALSE}
+bestModel <- lm(mpg ~  qsec + wt + am, data = mtcars)
+```
+
+Finally, we performed variance analysis (ANOVA) to test our best model. The analysis of variance shows that p-value is much lower than 0.05, hence we can conclude that our best model is statisticaly significant. The ANOVA results are presented at Appendix 4 of this report.
+
+```{r,eval=FALSE}
+anova(fullModel, bestModel)
+```
+
+## Work Performed - Residual Diagnostics
+Please find the residual diagnostics plot of our best model at Appendix 5 of this report.
+
+```{r,eval=FALSE}
+testModel <- lm(mpg ~ qsec + wt + am, data = mtcars)
+
+par(mfrow = c(2, 2))
+plot(testModel)
+```
+
+## Conclusion
+
+Based on our analysis, the p-value computed from t-test is 0.001374<0.05, we reject the null hypothesis that there is no difference in MPG influenced by other variables such as the transmission type (am).
+
+Based on our model, it is concluded that fuel efficiency of cars (mpg) is a function of the cars' quater mile time, weight and the type of transmission. On average, cars with manual transmission are better than cars with automatics transmission by 2.9358mpg.
+
+## Appendices
+```{r,echo=FALSE}
+library(datasets)
+data(mtcars)
+
+baseModel <- lm(mpg ~ am, data = mtcars)
+fullModel <- lm(mpg ~ ., data = mtcars)
+stepModel <- step(fullModel, direction="backward", k=2, trace=0)
+bestModel <- lm(mpg ~ qsec + wt + am, data = mtcars)
+```
+
+### Appendix 1: Boxplot of fuel efficiency by transmission
+```{r,echo=FALSE}
+boxplot(mpg ~ am, data = mtcars, xlab = "Transmission type", ylab = "Miles per gallon")
+```
+
+### Appendix 2: Pairwise analysis on all the dataset variables
+```{r,echo=FALSE}
+pairs(mtcars)
+```
+
+### Appendix 3: Summary of best model
+```{r,echo=FALSE}
+summary(bestModel)
+```
+
+### Appendix 4: Analysis of Variance Table (ANOVA) on full model and best model
+```{r,echo=FALSE}
+anova(fullModel, bestModel)
+```
+
+### Appendix 5: Residual Dianostics of best model
+```{r,echo=FALSE}
+testModel <- lm(mpg ~ qsec + wt + am, data = mtcars)
+par(mfrow = c(2, 2))
+plot(testModel)
+```
+
